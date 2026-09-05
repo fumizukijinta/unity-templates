@@ -87,6 +87,58 @@ asmdef の references に `"BallRolling"` を追加してから実装。エデ�
 #### 4. 次回への教訓 (Key Takeaway)
 エディターツールでゲームロジックを再利用する構成では、Editor asmdef への参照追加を先に行う（asmdefだけ置いた状態のWarning「no scripts associated with it」はスクリプト配置後に自動解消する一時的なもの）。
 
+## Step 3: 玉と傾け操作
+
+### 【事例】エディター再起動後にautotickが無効化され、CLIコマンドがタイムアウトする
+#### 1. 発生した現象 (Problem)
+エディター再起動後、`unity command eval` が「Main thread operation timed out」、`editor_status` もタイムアウト。しかしプロセスは生存・アイドルで、Pipeline HTTPサーバー（`/api/status` 直接叩き）は正常応答していた。
+#### 2. 原因 (Root Cause)
+autotick（バックグラウンドでのメインループ駆動）がエディター再起動で無効化されていた。エディターがフォーカスを持たないとメインスレッドのtickが止まり、コマンドのディスパッチだけが処理されない。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+診断手順: ①CPU変化を見る（静止＝ハングではない）→ ②ポートファイル（`Library/Pipeline/.unity-pipeline-port`）の `evalToken` で `/api/status` を直接HTTP確認（サーバー生存確認）→ ③autotick停止と断定。
+回復: エディターを**フォーカス**してもらう → `unity command set_autotick --enable true` を再実行。
+#### 4. 次回への教訓 (Key Takeaway)
+エディター再起動後のセッションでは autotick の再確認・再有効化を最初に行う。コマンドタイムアウト時は「プロセスCPU → HTTP直接 → autotick」の順に切り分けると原因を速断できる。
+
+### 【事例】迷路再生成でカメラが消える（子オブジェクト巻き込み削除）
+#### 1. 発生した現象 (Problem)
+迷路を再生成した後、プレイモードで `capture_game_view` が「No camera found」で失敗。evalで確認するとカメラが0台だった。
+#### 2. 原因 (Root Cause)
+カメラをMazeRoot（傾き同期のための親）の子にしていたが、再生成時の `Undo.DestroyObjectImmediate(MazeRoot)` で**子のカメラも巻き込まれて削除**された。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+削除前にカメラを退避＋欠損時に自動復元の二重対策:
+
+```csharp
+if (oldRoot != null)
+{
+    DetachCameraFrom(oldRoot.transform);   // カメラを親から外す（ワールド位置維持）
+    Undo.DestroyObjectImmediate(oldRoot);
+}
+// FrameCamera内: Camera.main == null なら MainCameraタグ付きで新規作成
+```
+#### 4. 次回への教訓 (Key Takeaway)
+「生成物の親に重要オブジェクトを置く」構成では、再生成の削除処理が子を巻き込む。削除前に退避するか、重要オブジェクトは親の外に置いてコードで追従させる。
+
+### 【事例】入り口を「穴」にすると玉が迷路に入れない（設計矛盾を動作確認で発見）
+#### 1. 発生した現象 (Problem)
+ステップ2で入り口・出口の両セルの床を穴にしたところ、入り口上にスポーンした玉が穴から迷路の下へ落下し、迷路に入れなかった。
+#### 2. 原因 (Root Cause)
+「玉は入り口から入り、出口から出る」の正しい解釈は「入り口セルの床に**着地**し、出口セルの穴から**落下**してクリア」。入り口まで穴にする必要はなかった。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+床生成の除外条件を出口のみに変更。design.mdに「出口セルのみ穴。入り口セルは床あり」と明記して仕様を確定した。
+#### 4. 次回への教訓 (Key Takeaway)
+「入る」「出る」の物理的意味（着地点・落下点）を設計段階で明確にする。キャプチャによる動作確認が設計矛盾の発見に有効。
+
+### 【事例】Unity 6のAPIリネームでコンパイルエラー（rigidbody.drag等）
+#### 1. 発生した現象 (Problem)
+`Rigidbody.drag`/`angularDrag`、`PhysicMaterial` の使用でUnity 6（6000.6）でコンパイルエラーになる。
+#### 2. 原因 (Root Cause)
+Unity 6で `Rigidbody.drag`→`linearDamping`、`angularDrag`→`angularDamping`、`PhysicMaterial`→`PhysicsMaterial`（`PhysicsMaterialCombine`）にリネームされた。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+Unity 6用の新API名で記述する（古いドキュメント・記憶ベースのコードに注意）。
+#### 4. 次回への教訓 (Key Takeaway)
+Unity 6系では物理APIの新名称を使う。コンパイルエラーが出たら旧API名を疑う。
+
 ---
 
 ## 一般（環境構築時に記録済みの事例）
