@@ -170,6 +170,25 @@ Physics.gravity = new Vector3(0f, -9.81f * p.GravityScale, 0f);
 
 ---
 
+### 【事例】すり抜け再発 — ContinuousDynamicだけでは防げない「物理爆発」
+#### 1. 発生した現象 (Problem)
+ContinuousDynamic＋厚いコライダーを適用しても玉が床をすり抜けた。残された状態を診断すると、玉はボード下 y=-67 を **104 m/s** で落下中だった（すり抜け時点でも数十m/s級）。
+#### 2. 原因 (Root Cause)
+壁同士がオーバーラップする継ぎ目領域に玉が高速でめり込むと、PhysXソルバーが複数のBoxの押し出しを合成して**異常な加速（物理爆発）**を与える。「急加速する時がある」の正体。爆発的速度になると1物理ステップの移動距離が床厚を超え、ContinuousDynamicでも対応できない。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+三重対策:
+1. **速度リミッター**（ランタイム、毎FixedUpdateでクランプ）: linear 12 m/s / angular 25 rad/s
+```csharp
+if (velocity.sqrMagnitude > max * max)
+    _rigidbody.linearVelocity = velocity.normalized * max;
+```
+2. **壁の下端を床に0.1めり込ませる**: 壁と床の接縫（すり抜きやすい縁）を消す
+3. **Fixed Timestep 0.02→0.01**: 物理ステップ細分化
+#### 4. 次回への教訓 (Key Takeaway)
+高速剛体ゲームでは「すり抜け防止＝Continuous系の設定」と思い込みがちだが、**速度そのものを制限するのが最も確実**（爆発も突き抜けも速度上限で封じられる）。連続衝突検出は補助手段。コライダー同士の「面と面のぴったり接触」も縁でのすり抜けを生むため、オーバーラップさせて構築する。
+
+---
+
 ## 一般（環境構築時に記録済みの事例）
 
 ### 【事例】Unityエディタ拡張でのオブジェクト生成とUndoの不整合
