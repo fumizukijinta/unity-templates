@@ -189,6 +189,24 @@ if (velocity.sqrMagnitude > max * max)
 
 ---
 
+### 【事例】低速ですり抜ける真因 — 静的コライダーをTransformで回していた
+#### 1. 発生した現象 (Problem)
+速度リミッター＋連続衝突検出を適用しても、**低速の「動き始め（傾け開始）のタイミング」**で玉が床をすり抜けた（物理爆発とは別の再発）。
+#### 2. 原因 (Root Cause)
+床・壁はRigidbodyなしの**静的コライダー**で、BoardControllerが親MazeRootをTransform回転させていた。静的コライダーを移動・回転させるのは物理エンジンのアンチパターンで、接触中の剛体との接触解決が不正確になる。ボードが傾き始めた瞬間、玉が床コライダー内部に相対めり込み、押し出し方向の誤判定で下に抜けた。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+移動・回転するコライダーの親には **Kinematic Rigidbody** を付ける（Unity公式の推奨パターン）:
+
+```csharp
+rootBody.isKinematic = true;
+rootBody.useGravity = false;
+rootBody.interpolation = RigidbodyInterpolation.Interpolate;
+```
+#### 4. 次回への教訓 (Key Takeaway)
+「コライダーを動かす＝Kinematic Rigidbody」は傾け迷路・回転ステージ・エレベーター系すべての基本。すり抜け対策は速度系（リミッター・連続衝突）だけでなく、**コライダーを動かす仕組みそのもの**を最初に確認する。低速ですり抜ける場合は静的コライダー移動を疑う。
+
+---
+
 ## 一般（環境構築時に記録済みの事例）
 
 ### 【事例】Unityエディタ拡張でのオブジェクト生成とUndoの不整合
