@@ -4,22 +4,11 @@
 
 ## プロジェクト概要
 
-- Unity 6（6000.6.0f1）+ Universal 3D (URP) テンプレートで作成した玉転がしゲーム
+- Unity {{UNITY_VERSION}} + {{TEMPLATE_NAME}} テンプレートで作成した{{GAME_TYPE}}ゲーム（{{GAME_NAME}}）
+- {{GAME_DESCRIPTION}}
 - ビルドターゲット: StandaloneWindows64
-- **ゲーム仕様・設計: `docs/requirements.md`（要件）と `docs/design.md`（詳細設計）を必ず参照。実装変更時は設計書も更新する**
-- バージョン管理: 未導入（git 導入時にルートの `.gitignore` を使用）
-
-## よく使うコマンド
-
-Unity CLI（`unity` コマンド）を使用します。
-
-```powershell
-unity open .                # プロジェクトを Unity エディターで開く
-unity status                # 接続中のエディター状態を確認
-unity test .                # EditMode / PlayMode テストを実行
-unity projects verify .     # ビルドを壊す整合性問題をチェック
-unity build .               # プロジェクトをビルド
-```
+- **ゲーム仕様・設計: `docs/requirements.md`（要件）と `docs/design.md`（詳細設計）を作成して参照。実装変更時は設計書も更新する**
+- バージョン管理: GitHub（画像・動画・音声はコミット除外、詳細は下記）
 
 ## 開発セッション開始時の手順
 
@@ -35,11 +24,24 @@ unity build .               # プロジェクトをビルド
 - エディター起動中は Pipeline コマンドが MCP ツール（`mcp__unity-editor-mcp__*`）として自動公開される
 - 設定変更は `unity mcp configure claude-code`、一覧は `claude mcp list` で確認
 
+## よく使うコマンド
+
+Unity CLI（`unity` コマンド）を使用します。
+
+```powershell
+unity open .                # プロジェクトを Unity エディターで開く
+unity status                # 接続中のエディター状態を確認
+unity test .                # EditMode / PlayMode テストを実行
+unity projects verify .     # ビルドを壊す整合性問題をチェック
+unity build .               # プロジェクトをビルド
+```
+
 ## コーディング規約
 
 - ゲームplay用スクリプトは `Assets/Scripts/` に配置する
 - テストコードは `Assets/Tests/EditMode/`・`Assets/Tests/PlayMode/` に配置する
 - エディター拡張は `Assets/Editor/` に配置する
+- アセットは `Assets/Art/`（{{GAME_TYPE}}: {{ART_ASSET_TYPES}}）、`Assets/Prefabs/`、`Assets/Audio/` 等に種類ごとに分けて配置する
 
 ### 命名規則（Unity公式ガイドライン準拠）
 
@@ -52,7 +54,7 @@ unity build .               # プロジェクトをビルド
 - イベントは動詞句: 直前は現在分詞（`OpeningDoor`）、直後は過去分詞（`DoorOpened`）。発火メソッドは `On` プレフィックス
 - **MonoBehaviourは1ファイル1クラス、ファイル名 = クラス名**
 - ハンガリアン記法・略語は使わない。冗長な名前も避ける（`Player`クラス内なら `Score` でよく `PlayerScore` は不要）
-- 名前空間はPascalCaseでフォルダ構造を反映（`BallRolling.Gameplay` 等）
+- 名前空間はPascalCaseでフォルダ構造を反映（`{{GAME_NAME}}.Gameplay` 等）
 - `= 0` / `= null` 等の冗長な初期化子は書かない。アクセス修飾子は明示する
 
 ## バージョン管理の運用
