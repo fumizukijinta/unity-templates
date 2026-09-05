@@ -1,0 +1,1 @@
+C:\Unity\templates\setup-3d.md を読んで環境構築して。ゲーム名は ｛｛MyNewGame｝｝、3Dアクションゲーム
