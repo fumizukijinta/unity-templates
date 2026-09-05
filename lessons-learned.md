@@ -153,6 +153,23 @@ Unity 6系では物理APIの新名称を使う。コンパイルエラーが出�
 
 ---
 
+### 【事例】玉が遅い・急加速する・床をすり抜けて消える（トンネリング）
+#### 1. 発生した現象 (Problem)
+①玉の転がりが遅い ②数秒転がると急加速する ③走行中に玉が急に消える（床突き抜け）。
+#### 2. 原因 (Root Cause)
+①摩擦0.6＋標準重力＋傾き15°では加速成分が小さい。②③薄いコライダー（床0.2/壁0.15）＋**Discrete衝突検出**では、高速時の1フレーム移動距離がコライダー厚を超えてすり抜ける（トンネリング）。すり抜けかけた際のソルバー補正が急加速に見えることがある。
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+- 速度: **重力スケール**（1〜4、デフォルト2.0）を追加し `Physics.gravity = 9.81 * scale`。摩擦デフォルト0.35に低減
+- すり抜け: 玉のRigidbodyに **`collisionDetectionMode = ContinuousDynamic`** ＋床厚0.5/壁厚0.2に増厚
+```csharp
+rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+Physics.gravity = new Vector3(0f, -9.81f * p.GravityScale, 0f);
+```
+#### 4. 次回への教訓 (Key Takeaway)
+剛体の速度が上がるゲームでは、最初から ContinuousDynamic ＋ ある程度厚いコライダーを設定する。「遅い→加速したい」調整と「すり抜け防止」はセットで行う。速度調整は角の%指定よりも重力スケール・摩擦など物理量の調整が自然で破綻しない。
+
+---
+
 ## 一般（環境構築時に記録済みの事例）
 
 ### 【事例】Unityエディタ拡張でのオブジェクト生成とUndoの不整合
