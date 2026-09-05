@@ -1,0 +1,111 @@
+# Unity が生成するフォルダー・ファイル
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+MemoryCaptures/
+Recordings/
+# Assets/ 内に生成される Logs フォルダーの meta（capture_game_view 等の保存先）
+[Ll]ogs.meta
+
+# アセットメタデータは必要に応じてコメントアウトを外す
+# /[Aa]ssets/AssetStoreTools*
+
+# Visual Studio / Rider のキャッシュ
+.vs/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+sysinfo.txt
+*.stackdump
+
+# Unity 生成ファイル
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# crashlytics
+crashlytics-build.properties
+sysinfo.txt
+
+# --- 容量対策: 大容量メディアはコミットしない ---
+# 画像
+*.psd
+*.png
+*.jpg
+*.jpeg
+*.tga
+*.bmp
+*.tif
+*.tiff
+*.exr
+*.hdr
+*.iff
+*.pict
+*.pdn
+# 動画
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mpg
+*.mpeg
+*.asf
+# 音声
+*.mp3
+*.wav
+*.ogg
+*.aif
+*.aiff
+*.flac
+*.m4a
+*.rns
+*.reason
+# 上記アセットのmetaファイル（本体の無いmetaを残さないため一緒に除外）
+*.psd.meta
+*.png.meta
+*.jpg.meta
+*.jpeg.meta
+*.tga.meta
+*.bmp.meta
+*.tif.meta
+*.tiff.meta
+*.exr.meta
+*.hdr.meta
+*.iff.meta
+*.pict.meta
+*.pdn.meta
+*.mp4.meta
+*.mov.meta
+*.webm.meta
+*.avi.meta
+*.mpg.meta
+*.mpeg.meta
+*.asf.meta
+*.mp3.meta
+*.wav.meta
+*.ogg.meta
+*.aif.meta
+*.aiff.meta
+*.flac.meta
+*.m4a.meta
+*.rns.meta
+*.reason.meta
+
+# Claude Code ローカル設定（マシン固有）
+.claude/settings.local.json
+# エージェントスキル（unity skill install で最新版を都度生成するため管理外）
+.claude/skills/

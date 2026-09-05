@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(unity test:*)",
+      "Bash(unity test:*)",
+      "PowerShell(unity command:*)",
+      "Bash(unity command:*)",
+      "PowerShell(unity status:*)",
+      "Bash(unity status:*)",
+      "PowerShell(unity list:*)",
+      "Bash(unity list:*)",
+      "PowerShell(unity build:*)",
+      "Bash(unity build:*)",
+      "PowerShell(unity run:*)",
+      "Bash(unity run:*)",
+      "PowerShell(unity pipeline:*)",
+      "Bash(unity pipeline:*)",
+      "PowerShell(unity projects verify:*)",
+      "Bash(unity projects verify:*)",
+      "PowerShell(unity projects info:*)",
+      "Bash(unity projects info:*)",
+      "PowerShell(unity projects list:*)",
+      "Bash(unity projects list:*)",
+      "PowerShell(unity editors:*)",
+      "Bash(unity editors:*)",
+      "PowerShell(unity open:*)",
+      "Bash(unity open:*)",
+      "PowerShell(unity close:*)",
+      "Bash(unity close:*)"
+    ]
+  }
+}
