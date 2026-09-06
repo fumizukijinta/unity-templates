@@ -275,3 +275,27 @@ Undo.RegisterCreatedObjectUndo(go, "Create SpawnedObject");
 ```
 #### 4. 次回への教訓 (Key Takeaway)
 Unityのエディタ拡張でシーン上の何かを変更・生成する場合は、ランタイム用のコードをそのまま使わず、必ず `UnityEditor` 名前空間の `Undo` や `PrefabUtility` を経由させること。
+
+---
+
+## Step 4（ゲームループ実装）
+
+### 発生した現象
+1. プレイモードのスモークテスト中、エディター非フォーカス時にフレームが完全停止（frameCount不変）。set_autotick の再有効化でも回復しない
+2. テストのため玉を出口セルへ転送した際、transform.localPosition を書き換えたが物理ボディ（Rigidbody.position）は移動せず、玉が落ちない
+3. 反射呼び出しで RegenerateMaze() と _loop.Restart() を個別に呼んだところ、UIテキスト（タイマー・メッセージ）が更新されず、一見実装バグに見えた
+
+### 原因
+1. エディター非フォーカス時はプレイヤーループが進行しない。autotick（SignalTick）はプレイモード中は機能しない場合がある
+2. Rigidbody（Interpolate）に対する transform 直接書き換えは物理ボディへ反映されない
+3. UI更新は RestartGame() 内の ApplyWaitingUi() で行われるため、内部処理を個別に呼ぶとスキップされる
+
+### 解決策・実装パターン
+1. フレーム停止時はユーザーにUnityウィンドウのフォーカスを依頼する（frameCountを2回計測して停止を確認してから）
+2. 実行中オブジェクトの転送は Rigidbody.position に書き換え、linearVelocity/angularVelocity をゼロ化して WakeUp()
+3. 反射で検証する際は公開メソッド相当（StartPlay / RestartGame）を経由して呼ぶ
+4. これらの手順は game-tester.md の「スモークテストの手順書」に集約し、以後のスモークテストは game-tester（glm-5.3-flash）が担当
+
+### 次回への教訓
+- 実装バグゼロでも検証方法の落とし穴で時間を消費する。実機操作の検証手順は手順書化して軽量エージェントへ移管するとトークン節約になる
+- 実装（game-coder）は glm-5.3[1m]、テスト・スモークテスト（game-tester）は glm-5.3-flash というモデル棲み分けを明示
