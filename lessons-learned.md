@@ -299,3 +299,13 @@ Unityのエディタ拡張でシーン上の何かを変更・生成する場合
 ### 次回への教訓
 - 実装バグゼロでも検証方法の落とし穴で時間を消費する。実機操作の検証手順は手順書化して軽量エージェントへ移管するとトークン節約になる
 - 実装（game-coder）は glm-5.3[1m]、テスト・スモークテスト（game-tester）は glm-5.3-flash というモデル棲み分けを明示
+
+### 【追記】リスタート後即時再ゴールバグ（Step 4 完了後の修正）
+
+**発生した現象**: ゴール後リスタート→開始すると即座に★★☆が再表示されプレイ不能。bug-fixer による SpawnBall() の Rigidbody.position 書き込み修正後も実プレイで再現（反射呼び出しのスモークテストでは合格していた）。
+
+**原因**: Update内で Space → StartPlay()（rb.position書き込み）→ 同一フレームの CheckGoal() が物理同期前の古い transform.localPosition（出口床下）を読み、即Goal成立。Rigidbody.position の書き込みは transform へ即時反映されない。スモークテストの反射呼び出しは eval（エディターループ）から行われ、次のUpdateまでに物理同期が挟まるため「Update内連続実行」を再現できていなかった（テストの呼び出しコンテキスト起因の偽陽性）。
+
+**解決策・実装パターン**: ①SpawnBall() で rb.position 書き込み直後に transform.position も同値で即時同期 ②CheckGoal() は transform でなく物理実位置（rb.position を親の InverseTransformPoint でローカル変換）で判定。スモークテスト手順書（game-tester.md）に「同一フレーム競合の再現」ケースを追加。
+
+**次回への教訓**: リアルタイム物理ゲームのテストは「呼び出しコンテキスト（Update内連続実行 vs 外部からの反射呼び出し）」まで含めて実プレイを再現しないと偽陽性になる。スモークテスト合格後も実機プレイでの最終確認を挟む。
