@@ -236,6 +236,27 @@ box.size = new Vector3(width + 1f, 0.2f, height + 1f); // 下面が壁上端よ�
 
 ---
 
+### 【事例】傾けても玉が転がらない — Kinematic回転の伝達と摩擦結合
+#### 1. 発生した現象 (Problem)
+ボードを15°傾けても玉がまったく転がらない（実測：6秒間で位置変化ゼロ）。ユーザーには「前方に傾けても転がらない、後ろに転がるように見える」と報告。
+#### 2. 原因 (Root Cause)
+二重の原因が重なっていた:
+1. **Kinematic Rigidbodyの回転を `transform.rotation` の直接書き換えで行っていた** → PhysX上はテレポート扱いとなり、静止接触中の玉に傾斜（重力の接線成分）が作用しない
+2. **玉のPhysicMaterialを frictionCombine=Maximum にしていた** → 素の床コライダー（摩擦0.6）との結合で0.6が採用され、tan15°=0.27 < 0.6 のため静止摩擦が傾斜成分に勝り、玉自体も動けない
+#### 3. 解決策・実装パターン (Solution and Code Pattern)
+- Kinematic回転は **`Rigidbody.MoveRotation`** を **FixedUpdate** で呼ぶ
+- 玉の摩擦結合を **Minimum**（床側の高摩擦を無視して玉側0.15を採用）
+- `Rigidbody.WakeUp()` を毎物理ステップ呼び、スリープによる転がり開始の遅れも排除
+```csharp
+// BoardController.FixedUpdate 内
+var next = Quaternion.Slerp(_rigidbody.rotation, target, speed * Time.fixedDeltaTime);
+_rigidbody.MoveRotation(next);  // transform.rotation への直接代入は使わない
+```
+#### 4. 次回への教訓 (Key Takeaway)
+「動くコライダー＝Kinematic Rigidbody」で止まらず、**動かす方法も MovePosition/MoveRotation** がセット。transform直接操作は物理に伝わらない。また PhysicMaterial の Combine 設定は相手側コライダーの既定値（摩擦0.6・跳ね0）との合成結果を決めるため、**Minimum にしないと低摩擦設定が無効化される**。傾け迷路の摩擦目安: 転がり開始には tan(傾き角) > 摩擦係数。
+
+---
+
 ## 一般（環境構築時に記録済みの事例）
 
 ### 【事例】Unityエディタ拡張でのオブジェクト生成とUndoの不整合
