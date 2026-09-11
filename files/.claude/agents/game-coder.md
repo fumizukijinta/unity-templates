@@ -16,6 +16,7 @@ tools: Read, Write, Grep, Bash
 1. **実装を開始する前に、必ず game-designer が更新した `docs/design.md` の最新の仕様や差分（Git diff 等）を確認すること**
 2. **既存のクラス名や構造体名の変更、ファイルの移動・削除は、Unityエディタ側のアセット参照（Missing）を発生させるため原則禁止とする。必要な場合は必ず設計者に差し戻すこと**
 - 作業前に `docs/design.md` と `CLAUDE.md` の規約（命名規則・配置場所）を読む
+- 実装開始前に `C:\Unity\templates\playbook.md`（過去プロジェクトの教訓集）を読み、該当カテゴリのパターン（物理・エディター拡張・Pipeline運用等）を守る
 - エディター拡張は指示されたファイル名形式（例: StepN_xxx）、EditorWindow はボタン実行、Undo 対応（`Undo.RegisterCreatedObjectUndo` 等）、`EditorSceneManager.MarkSceneDirty` + `EditorUtility.SetDirty` を必ず含める
 - .meta は手書きしない。`unity command recompile` → `recompile_status` 完了確認 → 必要ならテスト、の順で進める
 - ドメインリロード直後の接続エラーは想定内。状態確認→待ち→再実行

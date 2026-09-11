@@ -1,1 +1,2 @@
-C:\Unity\templates\setup-3d.md ‚ğ“Ç‚ñ‚ÅŠÂ‹«\’z‚µ‚ÄBƒQ[ƒ€–¼‚Í ooMyNewGameppA3DƒAƒNƒVƒ‡ƒ“ƒQ[ƒ€
+C:\Unity\templates\setup-3d.md ã‚’èª­ã‚“ã§ç’°å¢ƒæ§‹ç¯‰ã‚’é€²ã‚ã¦ã€‚
+    ã‚²ãƒ¼ãƒ å: ï½›ï½›MyNewGameï½ï½ / èª¬æ˜: ï½›ï½›Discriptionï½ï½ / å…¬é–‹ç¯„å›²: private
