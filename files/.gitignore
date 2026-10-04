@@ -56,6 +56,9 @@ sysinfo.txt
 *.iff
 *.pict
 *.pdn
+*.gif
+*.ase
+*.aseprite
 # 動画
 *.mp4
 *.mov
@@ -88,6 +91,9 @@ sysinfo.txt
 *.iff.meta
 *.pict.meta
 *.pdn.meta
+*.gif.meta
+*.ase.meta
+*.aseprite.meta
 *.mp4.meta
 *.mov.meta
 *.webm.meta
@@ -104,6 +110,37 @@ sysinfo.txt
 *.m4a.meta
 *.rns.meta
 *.reason.meta
+
+# モデル・ライブラリ等のバイナリ(第三者アセットは例外なくコミットしない方針)
+*.fbx
+*.obj
+*.blend
+*.dae
+*.3ds
+*.dll
+*.so
+*.dylib
+*.ttf
+*.otf
+*.unitypackage
+*.fbx.meta
+*.obj.meta
+*.blend.meta
+*.dae.meta
+*.3ds.meta
+*.dll.meta
+*.so.meta
+*.dylib.meta
+*.ttf.meta
+*.otf.meta
+*.unitypackage.meta
+
+# --- 第三者アセット(有償・無料を問わず)はフォルダごとコミットしない ---
+# 導入したアセットのフォルダを下に追記する(バックアップはgit外 + 再ダウンロードで担保)
+Assets/ThirdParty/
+Assets/ThirdParty.meta
+Assets/Art/
+Assets/Art.meta
 
 # Claude Code ローカル設定（マシン固有）
 .claude/settings.local.json

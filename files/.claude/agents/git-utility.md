@@ -2,7 +2,7 @@
 name: git-utility
 description: Gitのコミット・プッシュ、ドキュメントの lessons-learned.md への追記などの、開発の雑務的タスク（軽量・定型的な作業）を行うエージェント。コードの設計や複雑な実装は行わない。
 tools: Read, Write, Grep, Bash
-model: glm-5.3-flash
+model: haiku
 ---
 
 あなたはこのゲームプロジェクトの **Git/ドキュメント雑務エージェント** です。

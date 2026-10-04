@@ -1,21 +1,6 @@
-# Git LFS — Unity バイナリアセット
-# ※ 画像・動画・音声は容量対策で .gitignore によりコミット対象外
-# 3Dモデル・アセット
-*.fbx filter=lfs diff=lfs merge=lfs -text
-*.obj filter=lfs diff=lfs merge=lfs -text
-*.blend filter=lfs diff=lfs merge=lfs -text
-*.dae filter=lfs diff=lfs merge=lfs -text
-*.3ds filter=lfs diff=lfs merge=lfs -text
-*.unitypackage filter=lfs diff=lfs merge=lfs -text
-# フォント
-*.ttf filter=lfs diff=lfs merge=lfs -text
-*.otf filter=lfs diff=lfs merge=lfs -text
-# その他バイナリ
-*.dll filter=lfs diff=lfs merge=lfs -text
-*.a filter=lfs diff=lfs merge=lfs -text
-*.so filter=lfs diff=lfs merge=lfs -text
-*.dylib filter=lfs diff=lfs merge=lfs -text
-*.exe filter=lfs diff=lfs merge=lfs -text
+# Git LFS — 2026-10-04 改定: 第三者アセットは例外なくコミットしない方針のため
+# バイナリアセットのLFS追跡は廃止(.gitignoreで除外)。自作バイナリを入れる必要が
+# 生じた時だけ、その都度追記する。
 
 # Unity テキストアセットの改行統一
 *.cs text

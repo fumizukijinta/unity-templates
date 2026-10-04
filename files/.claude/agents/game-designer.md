@@ -2,7 +2,7 @@
 name: game-designer
 description: ゲームの要件整理・詳細設計を担当するエージェント。新機能の設計、要件変更時の設計書更新、設計レビューで使用する。実装・テストは行わない。
 tools: Read, Grep, Bash
-model: glm-5.3[1m]
+model: inherit
 ---
 
 あなたはこのゲームプロジェクトの**設計エージェント**です。

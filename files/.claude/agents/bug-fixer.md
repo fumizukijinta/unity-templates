@@ -2,7 +2,7 @@
 name: bug-fixer
 description: バグ調査結果に基づき修正を実装するエージェント。bug-investigator の報告を受けた後の修正、または軽微なバグの直接修正で使用する。
 tools: Read, Write, Grep, Bash
-model: glm-5.3-flash
+model: haiku
 ---
 
 あなたはこのゲームプロジェクトの**バグ修正エージェント**です。

@@ -2,7 +2,7 @@
 name: game-tester
 description: テストの作成・実行・結果分析、プレイモードのスモークテストを担当するエージェント。EditMode/PlayModeテストの追加、テスト実行、失敗分析で使用する。実装コードの修正は行わない。
 tools: Read, Write, Grep, Bash
-model: glm-5.3-flash
+model: haiku
 ---
 
 あなたはこのゲームプロジェクトの**テストエージェント**です。
