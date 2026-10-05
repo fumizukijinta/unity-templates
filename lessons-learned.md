@@ -354,3 +354,113 @@ Unityのエディタ拡張でシーン上の何かを変更・生成する場合
 ### 次回への教訓
 - Pipelineが「ハートビートは更新されるがコマンドが応答しない」なら半吊り。早期にエージェントを停止してエディター再起動した方が、タイムアウト待ちよりも総合的に速い
 - 状態を「初期状態に戻す」処理はAwakeだけでなく、状態に戻るすべての遷移（Restart）でも明示的に行う。初期化とリセットの非対称はGoal経由/TimeUp経由で顕在化が分かれる
+
+---
+
+# OkansCookingBattle（2Dデッキ構築カードゲーム、Unity 6000.6.0f1 / Universal 2D）
+
+## Step M1（バトルプロトタイプ: Core純C# + uGUIコード構築）
+
+### 【事例】アセットストアのパッケージ導入直後にコンパイルエラーが連鎖した
+#### 1. 発生した現象 (Problem)
+AssetInventory・CCGKit・UniWebView をインポートした直後、`CliArg`/`CliCommand` 未定義、Mirror/DG(DOTween) 未定義、InputSystem 未定義のエラーが出てプロジェクト全体がコンパイル不能になった。
+#### 2. 原因 (Root Cause)
+各パッケージの asmdef が、プロジェクト側に無い（または参照されていない）アセンブリに依存していた。AssetInventory の Pipeline 連携 asmdef は `Unity.Pipeline.Attributes`、UniWebView は `Unity.InputSystem`、CCGKit は Mirror と DOTween を前提にしていた。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- 不足アセンブリを asmdef の references に追加（`Unity.Pipeline.Attributes`、`Unity.InputSystem`）
+- 前提パッケージ（Mirror、DOTween）を追加インポート。DOTween の dll.meta は再シリアライズ（PluginImporter v1→3）
+#### 4. 次回への教訓 (Key Takeaway)
+- アセット導入は1つずつ行い、毎回 `console` でエラー0を確認してから次へ進む
+- 「使うかもしれない」大型キット（CCGKit 等）はコアに使わないなら導入自体を見送る。依存の連鎖でプロジェクトが壊れる
+
+### 【事例】第三者アセットを誤ってコミットし、リモートの LFS 容量を約256MB消費した
+#### 1. 発生した現象 (Problem)
+polyperfect（fbx 6,225 ファイル）が LFS 経由でコミット・push された。後から削除しても、リモートの LFS 容量は戻らなかった。
+#### 2. 原因 (Root Cause)
+テンプレートの .gitignore は画像・動画・音声だけを除外し、fbx・dll・ttf などは `.gitattributes` で LFS 追跡していた。そのため、第三者アセットのモデルやライブラリがコミット対象になった。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- 方針を「第三者アセット（有償・無料を問わず）は例外なくコミットしない」に変更。.gitignore にバイナリ全般とアセットフォルダ（+ .meta）を追加し、LFS 追跡は廃止
+- バックアップは git 外（別ドライブ）と Asset Store / itch.io の再ダウンロードで担保
+- テンプレート（files/.gitignore・.gitattributes・CLAUDE.md）にも反映済み
+#### 4. 次回への教訓 (Key Takeaway)
+- アセットをインポートしたら、**コミット前に `git status` で第三者アセットが混入していないか確認する**
+- LFS に一度 push したものは、履歴を書き換えないかぎり容量が戻らない。入れる前に止める
+
+### 【事例】コード構築の uGUI でカードの文字が見えない／「No cameras rendering」が出る
+#### 1. 発生した現象 (Problem)
+(a) 手札ボタンの文字が白地に白で見えなかった。(b) Game ビューに「Display 1 No cameras rendering」が表示された。
+#### 2. 原因 (Root Cause)
+(a) Text の色を明示せず、Button の targetGraphic の配色と衝突した。(b) シーンを作成したとき Main Camera を置いていなかった（UI が Overlay でも警告が出る）。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+(a) Text の色を濃色で明示し、Button の targetGraphic を設定。(b) シーンに Main Camera（タグ MainCamera）を追加。
+#### 4. 次回への教訓 (Key Takeaway)
+- コードで uGUI を組むときは、文字色・背景色を必ず明示し、`capture_game_view` の画像で見え方を確認する
+- `create_scene` で作ったシーンには、UI だけのシーンでも Main Camera と EventSystem を入れる
+
+## Step M2（1週ループ: 週進行・購入・料理・評価・週ログ）
+
+### 【事例】エージェント定義の model に GLM のモデルIDを直書きしていて、Claude 接続時に解決できなかった
+#### 1. 発生した現象 (Problem)
+`.claude/agents/*.md` の `model:` が `glm-5.3[1m]` などの z.ai 固有IDだった。Claude（Anthropic）接続に切り替えると、エージェントのモデルが解決できなかった。
+#### 2. 原因 (Root Cause)
+モデルIDは接続先ごとに異なる。片方のIDを直書きすると、もう一方では存在しないモデルになる。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- `model:` にはエイリアスだけを書く。重い役割は `inherit`、軽い役割は `haiku`
+- z.ai 側では `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL` でエイリアスを GLM のモデルへ対応づける（ユーザーの `$PROFILE` の起動関数で設定。プロジェクト設定には書かない）
+#### 4. 次回への教訓 (Key Takeaway)
+接続先を切り替える可能性があるなら、エージェントや設定ファイルに具体的なモデルIDを書かない。
+
+### 【事例】ゲーム固有の用語をクラス名に使っていて、途中で全面リネームになった
+#### 1. 発生した現象 (Problem)
+M1 のコードが Basket / Plate / Rack / Love / Quality / Taste / FoodTag など世界観由来の識別子で書かれていた。ユーザーの方針で「汎用的な一般名称」に統一することになり、M1 全体のリネームが発生した。
+#### 2. 原因 (Root Cause)
+命名方針（コードは汎用名、世界観の呼び名は表示文言だけ）をプロジェクト開始時に決めていなかった。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- 対応表（例: Basket→DrawPile、Plate→Board、Rack→Enhancers、Love→Energy、Quality→Life、Taste→Power、FoodTag→CardTag）を設計書に置き、識別子だけを変更。画面の日本語文言・カード名・ログ文言は不変
+- ログの JSON キーは、分析スクリプトとの互換のため変更しない
+#### 4. 次回への教訓 (Key Takeaway)
+- 命名方針（コード上は汎用名、ゲーム内の呼び名は表示文言のみ）を最初の設計で決め、CLAUDE.md に書く
+- ループの単位（日・週など）も早めに確定する（本件は Day→Week の改名も発生）
+
+### 【事例】相手が1人の前提で書いた表示文字列が残り、別の相手でも「ナツキさん」と表示された
+#### 1. 発生した現象 (Problem)
+M2 で常連のお客さんと対戦しても、バトル画面上部の名前が「ナツキさん」のままだった（対戦内容とログは正しかった）。
+#### 2. 原因 (Root Cause)
+M1 は相手が1人だったため、`BattleController` の出来栄え表示に相手名が文字列で直書きされていた。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+表示を `BattleSide.Name` から取るように変更（プレイヤー側も同様）。
+#### 4. 次回への教訓 (Key Takeaway)
+「1つ」から「複数」へ一般化するとき（相手・ステージ・キャラ等）は、旧来の単一インスタンス名を grep して直書きを洗い出す。
+
+### 【事例】バトルのログだけでは、ループ全体の問題（カードが尽きる理由）を説明できなかった
+#### 1. 発生した現象 (Problem)
+実プレイの体感は「カードの減りが早い」だったが、ログは1試合単位の battle_log だけで、家計・購入・使用回数の推移が残っていなかった。
+#### 2. 原因 (Root Cause)
+週ループの状態（口座・財布・購入・料理・使用回数の減少・消滅）はメモリ上だけにあり、ファイルに残していなかった。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- 1週1行の `week_log.jsonl` を追加。組み立ては Core の純粋関数（テスト可能）、書き込みだけ UI 側に置いた
+- battle_log に run_id と week を付け、2つのログを結合して分析（`tools/analyze_weeks.py`）
+- 分析で「フル試合で使用回数を約20/週消費（補充に約460円）に対し、収入が150円/週」と定量化でき、口座額の調整に直結した
+#### 4. 次回への教訓 (Key Takeaway)
+- ループ型のゲームは、ループの単位（週・ラン）で状態の推移を記録するログを、ループを作った最初の段階で入れる
+- 週の切り替わりだけで書き出すと、途中終了した週が残らない。必要なら終了時にも書き出す
+
+### 【事例】テストに調整用の数値を直書きしていて、数値の変更でテストが壊れた
+#### 1. 発生した現象 (Problem)
+口座の開始額・月入金を 600→1500 円に変えると、600 を直書きしたテストや、600 前提の残高（350 等）を検証するテストが壊れる状態だった。
+#### 2. 原因 (Root Cause)
+仮の数値（後で必ず調整するもの）を、テストの期待値に直接書いていた。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+期待値を `RunConstants.StartingAccount` などの定数参照や、`StartingAccount - 250` のような式に置き換えた。テスト名からも金額を外した。
+#### 4. 次回への教訓 (Key Takeaway)
+調整前提の数値は、テストでは定数を参照する。テストが検証すべきなのはルール（入金がある・減る）であって、仮の値そのものではない。
+
+### 【事例】Pipeline の操作系コマンドの癖（eval・simulate_pointer・MCP切断）
+#### 1. 発生した現象 (Problem)
+(a) `simulate_pointer` でのボタン操作が座標ずれで不安定だった。(b) `eval` が先頭の `using` 行を using ステートメントとして解釈してエラーになった。(c) 作業中に MCP（unity-editor-mcp）の接続が切れ、`mcp__unity-editor-mcp__*` ツールが使えなくなった。
+#### 2. 原因 (Root Cause)
+(a) 画面座標とキャンバス座標の対応がずれる。(b) eval のコードはメソッド本体として扱われる。(c) MCP サーバーの接続はセッション中に切れることがある。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+(a) スモークテストでは `eval` で `Button.onClick.Invoke()` を呼んで画面を進める。(b) eval では完全修飾名（`OkansCookingBattle.Core.WeekFlow` 等）を使う。(c) `unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる。
+#### 4. 次回への教訓 (Key Takeaway)
+MCP ツールが無くても `unity command` で代替できる。eval での画面操作は手早いが、実プレイの代わりにはならない（最終ゲートはユーザーの実プレイ）。
