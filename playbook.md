@@ -89,8 +89,9 @@
 - **ハートビート更新 ≠ コマンド応答**。「ハートビートは更新されるがコマンドが Unauthorized/タイムアウト」なら半吊り状態。2回連続で不通なら待たずに①実行中エージェント停止②Unity再起動③autotick再有効化（再起動が最速）
 - **エディター起動中は `unity test .` が競合する**。テストは `unity command run_tests --mode EditMode` で実行
 - **MCP（`mcp__unity-editor-mcp__*`）が切れても、`unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる**
-- `capture_game_view` の保存先はプロジェクト内（Assets/Temp 等）にし、確認後に一時フォルダを削除。プロジェクト外を指定するとエラーで再生が止まる
+- `capture_game_view` の保存先はプロジェクト内（Assets/Temp 等）にし、確認後に一時フォルダを `Assets/Temp.meta` ごと削除。プロジェクト外を指定するとエラーで再生が止まる。`screenshot` はカメラ描画のみで Screen Space Overlay の UI は写らない
 - `simulate_key` は押下の瞬間（`WasPressedThisFrame`）を作れない。ボタン入力の確認は eval で `InputSystem.QueueStateEvent`
+- **キー入力を再現する前に `Application.isFocused` を確認する**。false（Game ビュー非フォーカス）だとキーボード入力は simulate_key・QueueStateEvent とも届かない（Input System の設定変更・`editor_focus` でも解消しなかった）。ユーザーに Game ビューのクリックを頼むか、入口のメソッド（`IInteractable.Interact`・`ConfirmDialog.Choose` 等）を直接呼んで確認し、キー経路は未確認と記録する
 - Unity 6.6 は新規 PNG を自動で Multiple・PPU100 にスライスする。ドット絵は PPU・Filter(Point)・Compression(None)・スライスを明示設定し、値で確認する
 - `eval` は先頭の `using` 行を using ステートメントとして解釈する。型は完全修飾名で書く
 - UI のスモークテストで `simulate_pointer` は座標ずれで不安定。`eval` で `Button.onClick.Invoke()` を呼んで進める（ただし実プレイの代わりにはならない）

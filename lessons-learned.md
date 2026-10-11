@@ -502,3 +502,20 @@ CCGKit の取り込みで ProjectSettings の17ファイルが上書きされて
 #### 4. 次回への教訓 (Key Takeaway)
 - PixelPerfectCamera / Light2D / Renderer2DData のアセンブリは `Unity.RenderPipelines.Universal.2D.Runtime`
 - `FindObjectsSortMode` 付きの API は非推奨になった
+
+## Step W1（家ハブ化: 1階・2階、息子の部屋の前での夕食、Esc で閉じる）
+
+### 【事例】Game ビューにフォーカスが無く、キー入力の再現（simulate_key・QueueStateEvent）がどちらも届かなかった
+#### 1. 発生した現象 (Problem)
+作業を再開して息子の部屋の前→評価の流れを確かめようとしたところ、`simulate_key`（press / down→up）でも、eval の `InputSystem.QueueStateEvent` でも「調べる」が反応しなかった。キャラは対象（SonRoomDoor）を正しく向いていて、フレームも進んでいた（`Time.frameCount` は増加）。キーを押した状態を入れた直後でも `Keyboard.current.zKey.isPressed` が false のままだった。
+#### 2. 原因 (Root Cause)
+- `Application.isFocused` が false（Game ビューにフォーカスが無い）。Input System の設定が既定の `editorInputBehaviorInPlayMode = PointersAndKeyboardsRespectGameViewFocus`・`backgroundBehavior = ResetAndDisableNonBackgroundDevices` のため、キーボードの入力がゲーム側に届かない
+- 実行中に設定を `AllDeviceInputAlwaysGoesToGameView` / `IgnoreFocus` に変えても、`editor_focus` や `EditorWindow.Focus()` で Game ビューにフォーカスを当てようとしても、`isFocused` は false のままで入力は届かなかった
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- キー入力の読み取りより先の処理を、入力が呼ぶのと同じ入口から直接呼んで流れを確かめた: `Interactor.CurrentTarget.Interact(interactor)` → `ConfirmDialog.Choose(true)` → 画面のボタンは `ScreenRouter.Advance()`
+- 状態は数値・文字列で確認（`WeekFlow.CurrentPhase`、ScreenRouter の `_current` を反射で取得して画面の種類と activeInHierarchy、`ScreenExitRules.CanCloseWithCancel`、週ログの行数、キャラの位置と開始位置の一致）
+- 一時的に変えた Input System の設定は、検証の最後に元の値へ戻した（`InputSystem.settings` はアセットなので、変えたままにしない）
+#### 4. 次回への教訓 (Key Takeaway)
+- キー入力で操作を再現する前に `Application.isFocused` を確認する。false なら、キーの再現（simulate_key / QueueStateEvent）は当てにせず、ユーザーに Game ビューのクリックを頼むか、入口のメソッドを直接呼ぶ。直接呼ぶ場合、キー操作の経路そのものは確認できていないので、そう記録する
+- `screenshot`（Pipeline）はカメラの描画だけを撮るため、Screen Space Overlay の UI（評価画面など）は写らない。UI の表示は activeInHierarchy・Canvas の状態で確認するか、UI ごと撮れる `capture_game_view` を使う
+- `Assets/Temp/` を削除すると、Unity が作った `Assets/Temp.meta` が残る。一緒に消す
