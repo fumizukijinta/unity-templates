@@ -464,3 +464,41 @@ M1 は相手が1人だったため、`BattleController` の出来栄え表示に
 (a) スモークテストでは `eval` で `Button.onClick.Invoke()` を呼んで画面を進める。(b) eval では完全修飾名（`OkansCookingBattle.Core.WeekFlow` 等）を使う。(c) `unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる。
 #### 4. 次回への教訓 (Key Takeaway)
 MCP ツールが無くても `unity command` で代替できる。eval での画面操作は手早いが、実プレイの代わりにはならない（最終ゲートはユーザーの実プレイ）。
+
+## Step W0（移動基盤: テストルーム・自由移動・調べる）と第三者アセットの整理
+
+### 【事例】.gitignore に追加済みの第三者アセットが、git 管理に約4,400ファイル残っていた
+#### 1. 発生した現象 (Problem)
+「第三者アセットは例外なくコミットしない」方針にして .gitignore にフォルダを追加した後も、CCGKit・AssetInventory・Mirror・DOTween のコード類（約4,400ファイル）と、UniWebView の本体（Assets/Plugins 配下）、DOTween の設定、Mirror のスクリプト雛形が git 管理に残っていた。W0 の作業中に、CCGKit のファイルが「git で追跡されている」ことから発覚した。
+#### 2. 原因 (Root Cause)
+- .gitignore は「まだ管理していないファイル」を除外するだけで、既に管理されているファイルは外れない
+- アセットによっては実体が別フォルダに置かれる（UniWebView は Assets/Plugins、DOTween は Assets/Resources、Mirror は Assets/ScriptTemplates）。パッケージ名のフォルダだけ除外しても漏れる
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- `git rm -r --cached <フォルダ>` で管理からだけ外す（ローカルのファイルは残る）。外した後 `git ls-files <フォルダ>` が0件、`git status --ignored` で `!!` になることを確認
+- `git ls-files Assets` から自作分を除いた一覧を出し、別フォルダに置かれた第三者ファイルを洗い出して個別パスで .gitignore に追加
+#### 4. 次回への教訓 (Key Takeaway)
+- フォルダを .gitignore に足したら、必ず `git ls-files <フォルダ>` で0件を確認する
+- アセット導入後は `git status` だけでなく、新しく増えた Assets 直下・Plugins・Resources 等のフォルダも確認する
+
+### 【事例】「プロジェクト丸ごと」型のアセットを取り込み、プロジェクト設定が書き換わっていた
+#### 1. 発生した現象 (Problem)
+CCGKit の取り込みで ProjectSettings の17ファイルが上書きされていた。描画設定（Graphics の既定・Quality 6段階・URP のグローバル設定）が CCGKit 配下の URP アセットを指し、Build Settings には CCGKit のデモシーン5件が登録されていた（ビルドすると CCGKit のデモから起動する状態）。
+#### 2. 原因 (Root Cause)
+アセットストアの「Complete Project」型パッケージは、インポート時に ProjectSettings を含めて上書きする。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+- エディター API で自前のアセットに戻した: `GraphicsSettings.defaultRenderPipeline`、全品質レベルの `QualitySettings.renderPipeline`、`EditorGraphicsSettings.SetRenderPipelineGlobalSettingsAsset<UniversalRenderPipeline>(asset)`（引数は `RenderPipelineGlobalSettings` 型で読み込む）、`EditorBuildSettings.scenes`
+- 第三者フォルダ内の全 .meta の guid を ProjectSettings と突き合わせ、参照0件を確認
+#### 4. 次回への教訓 (Key Takeaway)
+- アセット取り込みの直後に `git diff --stat ProjectSettings` を見る。差分があれば、意図した変更か確認してからコミットする
+- 第三者アセットを管理から外す・削除する前に、ProjectSettings がその中のファイルを参照していないか guid で確認する（参照が残ると他の環境で描画が壊れる）
+
+### 【事例】Pipeline の操作系コマンドの癖（W0 で判明）
+#### 1. 発生した現象 (Problem)
+(a) `capture_game_view` の保存先をプロジェクト外にするとエラーになり、Error Pause で再生が止まった。(b) `simulate_key` の down/up で移動はできるが、`WasPressedThisFrame` が立たず「調べる」ボタンを確認できなかった。(c) Unity 6.6 では新規 PNG が自動で Multiple・PPU100 にスライスされ、「スプライトがある＝インポート設定済み」と誤判定した。
+#### 2. 原因 (Root Cause)
+(a) 保存先はプロジェクト内の制約がある。(b) simulate_key は状態の書き換えで、押下の瞬間のイベントにならない。(c) Unity 6.6 のテクスチャインポートの既定値が変わった。
+#### 3. 解決策・実装パターン (Solution & Code Pattern)
+(a) 保存先はプロジェクト内（Assets/Temp 等）にし、確認後に一時フォルダを削除。(b) ボタンの確認は eval で `InputSystem.QueueStateEvent` を使う。(c) PPU・Filter・Compression・スライスを明示的に設定し、値で確認する。
+#### 4. 次回への教訓 (Key Takeaway)
+- PixelPerfectCamera / Light2D / Renderer2DData のアセンブリは `Unity.RenderPipelines.Universal.2D.Runtime`
+- `FindObjectsSortMode` 付きの API は非推奨になった

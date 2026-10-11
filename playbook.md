@@ -72,6 +72,8 @@
 - **第三者アセット（有償・無料を問わず）は例外なくコミットしない**。インポート後は**コミット前に `git status` で混入を確認**。LFS に一度 push すると、履歴を書き換えないかぎりリモート容量は戻らない
 - アセットは1つずつ導入し、毎回 `console` でエラー0を確認してから次へ。asmdef 依存の不足（例: `Unity.Pipeline.Attributes`、`Unity.InputSystem`、Mirror、DOTween）は asmdef の references 追加か前提パッケージの導入で解消する
 - コアに使わない大型キット（CCGKit 等）は導入を見送る。依存の連鎖でプロジェクトが壊れる
+- **.gitignore は既に管理済みのファイルを外さない**。フォルダを足したら `git ls-files <フォルダ>` で0件を確認し、残っていれば `git rm -r --cached`。実体が別フォルダ（Plugins / Resources / ScriptTemplates）に置かれるアセットもあるので、導入後は Assets 直下の新しいフォルダも確認する
+- **「Complete Project」型のアセットは ProjectSettings を上書きする**（描画設定・Build Settings・入力など）。取り込み直後に `git diff --stat ProjectSettings` を見る。第三者アセットを外す前に、ProjectSettings がその中を guid で参照していないか確認する
 
 ## uGUI（コードで構築する場合）
 
@@ -87,6 +89,9 @@
 - **ハートビート更新 ≠ コマンド応答**。「ハートビートは更新されるがコマンドが Unauthorized/タイムアウト」なら半吊り状態。2回連続で不通なら待たずに①実行中エージェント停止②Unity再起動③autotick再有効化（再起動が最速）
 - **エディター起動中は `unity test .` が競合する**。テストは `unity command run_tests --mode EditMode` で実行
 - **MCP（`mcp__unity-editor-mcp__*`）が切れても、`unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる**
+- `capture_game_view` の保存先はプロジェクト内（Assets/Temp 等）にし、確認後に一時フォルダを削除。プロジェクト外を指定するとエラーで再生が止まる
+- `simulate_key` は押下の瞬間（`WasPressedThisFrame`）を作れない。ボタン入力の確認は eval で `InputSystem.QueueStateEvent`
+- Unity 6.6 は新規 PNG を自動で Multiple・PPU100 にスライスする。ドット絵は PPU・Filter(Point)・Compression(None)・スライスを明示設定し、値で確認する
 - `eval` は先頭の `using` 行を using ステートメントとして解釈する。型は完全修飾名で書く
 - UI のスモークテストで `simulate_pointer` は座標ずれで不安定。`eval` で `Button.onClick.Invoke()` を呼んで進める（ただし実プレイの代わりにはならない）
 - キャプチャの使い分け: **Main Camera（ゲーム画面）の確認は `capture_game_view`**。`capture_scene_view` はエディターのシーンビューカメラを撮るもので Main Camera と無関係
