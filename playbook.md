@@ -79,6 +79,8 @@
 
 - 文字色・背景色を必ず明示し、Button の targetGraphic も設定する（白地に白文字で見えない実例あり）。見え方は `capture_game_view` の画像を Read で確認
 - `create_scene` で作ったシーンには、UI だけでも **Main Camera と EventSystem** を入れる（無いと「No cameras rendering」）
+- **日本語フォントは記号を一部持たない**（例: DotGothic16 に「▶」が無く豆腐になった）。フォントを選んだら、表示する全文字（台詞・カード名・記号）が収録されているかを fontTools の `getBestCmap()` でスクリプト確認する。文字を足したときも同じ確認をする
+- TMP の日本語フォントは、`TMP_FontAsset.CreateFontAsset(font, ...)` で実行時に動的フォントアセットを作れる（フォントは Resources に置く。.asset を作らずに済み、第三者フォントをコミットしない運用と両立する）。見つからないときは OS のフォント（`CreateFontAsset(familyName, styleName)`）に切り替える
 
 ## Unity CLI（Pipeline）運用
 
@@ -86,6 +88,7 @@
 - ドメインリロード直後の「テスト0件」「Network error」「Thread was being aborted」（発生源 `Unity.Pipeline.*`）は**想定内**。直後の操作が成功していれば無視してよい
 - **エディター再起動後は autotick が無効化されている**。最初に `set_autotick --enable true` を再実行。エディター非フォーカス時はフレームが完全停止し得る（`frameCount` を2回計測して停止を確認→ユーザーにフォーカスを依頼）
 - コマンドタイムアウト時の切り分け順: ①プロセスCPU変化（静止＝ハングではない）→ ②ポートファイル（`Library/Pipeline/.unity-pipeline-port`）の `evalToken` で `/api/status` を直接HTTP確認 → ③autotick 停止と断定
+- **Pipeline が続けてタイムアウトしたら、再起動の前にエディターのウィンドウがアクティブかを確かめる**（非アクティブでメインスレッドが止まり「Main thread operation timed out」になる。アクティブにすると再起動なしで戻った）。.cs の編集は再生を止めてから（再生中の再コンパイルで eval が NullReference になる）
 - **ハートビート更新 ≠ コマンド応答**。「ハートビートは更新されるがコマンドが Unauthorized/タイムアウト」なら半吊り状態。2回連続で不通なら待たずに①実行中エージェント停止②Unity再起動③autotick再有効化（再起動が最速）
 - **エディター起動中は `unity test .` が競合する**。テストは `unity command run_tests --mode EditMode` で実行
 - **MCP（`mcp__unity-editor-mcp__*`）が切れても、`unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる**
