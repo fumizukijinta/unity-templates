@@ -80,6 +80,7 @@
 - 文字色・背景色を必ず明示し、Button の targetGraphic も設定する（白地に白文字で見えない実例あり）。見え方は `capture_game_view` の画像を Read で確認
 - `create_scene` で作ったシーンには、UI だけでも **Main Camera と EventSystem** を入れる（無いと「No cameras rendering」）
 - **日本語フォントは記号を一部持たない**（例: DotGothic16 に「▶」が無く豆腐になった）。フォントを選んだら、表示する全文字（台詞・カード名・記号）が収録されているかを fontTools の `getBestCmap()` でスクリプト確認する。文字を足したときも同じ確認をする
+- **ドットフォントに TMP の疑似太字・斜体を使わない**（ドットがつながって滲む。強調は色と大きさで）。uGUI の Text から TMP に移すときは、固定の高さの枠に複数行を出す所を洗い出す（フォントで行の高さが変わり、TMP は枠外を切らない。`overflowMode` か `RectMask2D` で決め、行数が最大の状態で撮って確認）
 - TMP の日本語フォントは、`TMP_FontAsset.CreateFontAsset(font, ...)` で実行時に動的フォントアセットを作れる（フォントは Resources に置く。.asset を作らずに済み、第三者フォントをコミットしない運用と両立する）。見つからないときは OS のフォント（`CreateFontAsset(familyName, styleName)`）に切り替える
 
 ## Unity CLI（Pipeline）運用
