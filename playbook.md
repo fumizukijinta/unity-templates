@@ -90,6 +90,7 @@
 - **エディター再起動後は autotick が無効化されている**。最初に `set_autotick --enable true` を再実行。エディター非フォーカス時はフレームが完全停止し得る（`frameCount` を2回計測して停止を確認→ユーザーにフォーカスを依頼）
 - コマンドタイムアウト時の切り分け順: ①プロセスCPU変化（静止＝ハングではない）→ ②ポートファイル（`Library/Pipeline/.unity-pipeline-port`）の `evalToken` で `/api/status` を直接HTTP確認 → ③autotick 停止と断定
 - **Pipeline が続けてタイムアウトしたら、再起動の前にエディターのウィンドウがアクティブかを確かめる**（非アクティブでメインスレッドが止まり「Main thread operation timed out」になる。アクティブにすると再起動なしで戻った）。.cs の編集は再生を止めてから（再生中の再コンパイルで eval が NullReference になる）
+- **検証でシーンを切り替えたら、最後にユーザーが普段遊ぶシーン（OkansCookingBattle なら Home.unity）を開き直してから終える**。別シーン（Game.unity 等）が開いたままだと、ユーザーが Play したときに想定外の画面から始まる
 - **ハートビート更新 ≠ コマンド応答**。「ハートビートは更新されるがコマンドが Unauthorized/タイムアウト」なら半吊り状態。2回連続で不通なら待たずに①実行中エージェント停止②Unity再起動③autotick再有効化（再起動が最速）
 - **エディター起動中は `unity test .` が競合する**。テストは `unity command run_tests --mode EditMode` で実行
 - **MCP（`mcp__unity-editor-mcp__*`）が切れても、`unity command <name>`（CLI）で同じ Pipeline コマンドを実行できる**
